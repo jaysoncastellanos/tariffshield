@@ -1,5 +1,7 @@
-import { Link } from "wouter";
-import { ArrowRight, Shield, TrendingDown, Bell, FileSearch, ChevronRight, DollarSign, Clock, Zap, BarChart3, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/context/AuthContext";
+import { logout } from "@/lib/auth";
+import { ArrowRight, Shield, TrendingDown, Bell, FileSearch, ChevronRight, DollarSign, Clock, Zap, BarChart3, AlertTriangle, CheckCircle2, LogIn, LogOut, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -56,6 +58,15 @@ function Ticker() {
 
 // ── Nav ───────────────────────────────────────────────────
 function Nav() {
+  const { user, setUser } = useAuth();
+  const [, setLocation] = useLocation();
+
+  async function handleLogout() {
+    await logout();
+    setUser(null);
+    setLocation("/");
+  }
+
   return (
     <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -71,16 +82,31 @@ function Nav() {
           <a href="#pricing" onClick={e => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Pricing</a>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/calculator">
-            <Button variant="ghost" size="sm" className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 text-sm">
-              Free Refund Scan
-            </Button>
-          </Link>
-          <Link href="/onboarding">
-            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm">
-              Get Started
-            </Button>
-          </Link>
+          {user ? (
+            <>
+              <span className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground">
+                <User className="w-3.5 h-3.5" />{user.name}
+              </span>
+              <Link href="/dashboard">
+                <Button size="sm" className="bg-primary text-primary-foreground font-semibold text-sm">Dashboard</Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground text-sm">
+                <LogOut className="w-3.5 h-3.5 mr-1" />Sign out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/calculator">
+                <Button variant="ghost" size="sm" className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 text-sm">Free Refund Scan</Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="ghost" size="sm" className="text-sm"><LogIn className="w-3.5 h-3.5 mr-1" />Sign In</Button>
+              </Link>
+              <Link href="/signup">
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm">Get Started</Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -172,7 +198,7 @@ export default function Landing() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <Link href="/onboarding">
+              <Link href="/signup">
                 <Button size="lg" variant="outline" className="border-border text-foreground hover:bg-secondary font-semibold text-base px-8">
                   Start Monitoring — $500/mo
                 </Button>
@@ -436,7 +462,7 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link href="/onboarding">
+              <Link href="/signup">
                 <Button variant="outline" className="w-full border-border hover:bg-secondary font-semibold">
                   Start Monitoring
                 </Button>
@@ -466,7 +492,7 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link href="/onboarding">
+              <Link href="/signup">
                 <Button variant="outline" className="w-full border-border hover:bg-secondary font-semibold">
                   Contact Us
                 </Button>
@@ -493,7 +519,7 @@ export default function Landing() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link href="/onboarding">
+            <Link href="/signup">
               <Button size="lg" variant="outline" className="border-border font-semibold">
                 Start Monitoring
               </Button>
