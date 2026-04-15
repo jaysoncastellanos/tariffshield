@@ -1,8 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
+import cron from "node-cron";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { runMigrations } from "./migrate";
 
 const app = express();
 const httpServer = createServer(app);
@@ -62,6 +64,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run DB migrations (creates tables if not exists)
+  runMigrations();
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
@@ -102,4 +107,23 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
+
+  // ── Weekly Tariff Intelligence Cron ───────────────────────
+  // Runs every Monday at 7:00 AM UTC (3:00 AM ET)
+  // Scans for new tariff developments + sends briefings to all subscribers
+  cron.schedule("0 7 * * 1", async () => {
+    log("[cron] Starting weekly tariff intelligence cycle...", "cron");
+    try {
+      const { runWeeklyAgentCycle } = await import("./agent");
+      const result = await runWeeklyAgentCycle();
+      log(`[cron] Weekly cycle complete: ${JSON.stringify(result)}`, "cron");
+    } catch (err) {
+      console.error("[cron] Weekly cycle failed:", err);
+    }
+  }, {
+    scheduled: true,
+    timezone: "America/New_York"
+  });
+
+  log("Weekly tariff intelligence cron scheduled (Mondays 7am UTC)", "cron");
 })();

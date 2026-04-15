@@ -103,6 +103,11 @@ function seedDemoData() {
 export function registerRoutes(httpServer: Server, app: Express) {
   seedDemoData();
 
+  // ── Health check (Railway uses this) ──────────────────
+  app.get("/api/health", (_req, res: Response) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString(), version: "1.0.0" });
+  });
+
   // ╔══════════════════════════════════════════════════════╗
   // ║  AUTH ROUTES                                         ║
   // ╚══════════════════════════════════════════════════════╝
