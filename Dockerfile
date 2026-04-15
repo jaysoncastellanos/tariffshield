@@ -1,14 +1,14 @@
-FROM node:20-alpine
+FROM node:20-slim
 
-# Install build tools needed for native modules (better-sqlite3)
-RUN apk add --no-cache python3 make g++ linux-headers
+# Install build tools for native modules (better-sqlite3)
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy package files first for layer caching
 COPY package*.json ./
 
-# Install ALL deps and force-rebuild native modules for this platform
+# Install ALL deps, rebuilding native modules for this platform (glibc)
 RUN npm ci --build-from-source
 
 # Copy all source
@@ -16,6 +16,9 @@ COPY . .
 
 # Build frontend + server bundle
 RUN npm run build
+
+# Rebuild native modules against the production node binary
+RUN npm rebuild better-sqlite3
 
 # Create data directory for SQLite persistence
 RUN mkdir -p /app/data
